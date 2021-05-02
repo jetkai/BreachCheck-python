@@ -122,7 +122,7 @@ def main():
     if len(sys.argv) > 2:
         hashType = sys.argv[2]
     if len(sys.argv) > 3:
-        usingHttps = sys.argv[3]
+        usingHttps = sys.argv[3].lower() == 'true'
     initExample()
 
 # Calls main()
