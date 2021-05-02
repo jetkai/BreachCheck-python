@@ -3,26 +3,27 @@ import sys
 import hashlib
 
 password = ""  # CHANGE ME
-hashType = "SHA-1"  # MD5, SHA-1, SHA-256, SHA-512 & PLAIN-TEXT
-usingHttps = True  # //True = HTTPS, False = HTTP
+hash_type = "SHA-1"  # MD5, SHA-1, SHA-256, SHA-512 & PLAIN-TEXT
+using_https = True  # //True = HTTPS, False = HTTP
 
-apiUrl = "api.rsps.tools/jetkai/breachcheck"  # DO NOT CHANGE
+api_url = "api.rsps.tools/jetkai/breachcheck"  # DO NOT CHANGE
 token = "39439e74fa27c09a4"  # DO NOT CHANGE
 
-returnedJson = ""  # Data that is returned from the api
+returned_json = ""  # Data that is returned from the api
 
 
 # /**
 #  * Sends HTTP Request to return data
 #  * @return The data from HTTP Request and checks if it contains "breached":true
 #  */
-def isBreached(password, hashType, usingHttps, token, apiUrl):
-    connect(password, hashType, usingHttps, token, apiUrl)
-    return "\"breached\":true" in returnedJson
+def is_breached(password, hash_type, using_https, token, api_url):
+    connect(password, hash_type, using_https, token, api_url)
+    return '"breached":true' in returned_json
 
 
 # /**
-#  * Sends HTTP Request to the API, setting the returnedJson string with returned JSON data
+#  * Sends HTTP Request to the API, setting the returned_json string with returned JSON data
+#  * HTTP is ~2x faster than HTTPS
 #  *
 #  * URL Request Example:
 #  * https://api.rsps.tools/jetkai/breachcheck?token=39439e74fa27c09a4&hash=ed8779a2222dc578f2cffbf308411b41381a94ef25801f9dfbe04746ea0944cd
@@ -34,61 +35,51 @@ def isBreached(password, hashType, usingHttps, token, apiUrl):
 #  * 	"hashPos": 2,
 #  * 	"severity": "Top 100 Common Passwords",
 #  * 	"databaseBreach": "Stoned 2021 ~800K Unique Passwords (15+ RSPS Databases)",
-#  * 	"hashType": "SHA-256",
+#  * 	"hash_type": "SHA-256",
 #  * 	"breached": true
 #  * }
 #  */
 
-def connect(password, hashType, usingHttps, token, apiUrl):
-    global returnedJson
-    requestUrl = getProtocol(usingHttps) + apiUrl + "?token=" + token + "&" + getHashOrPassword(
-        hashType) + "=" + getHashedPassword(password, hashType)
-
-    returnedJson = requests.get(requestUrl).text
+def connect(password, hash_type, using_https, token, api_url):
+    global returned_json
+    protocol = "https://" if using_https else "http://"
+    request_url = protocol + api_url + "?token=" + token + "&" + get_hash_or_password(hash_type) + "=" + get_hashed_password(password, hash_type)
+    returned_json = requests.get(request_url).text
 
 
 # /**
 #  * Hex's the plain-text password, either using:
-#  * MD5, SHA-1, SHA256
-#  * @return The hexed password, fallsback to plain-text if an incorrect hashType is set
+#  * MD5, SHA-1, SHA256, SHA-512
+#  * @return The hexed password, fallsback to plain-text if an incorrect hash_type is set
 #  */
-def getHashedPassword(password, hashType):
+def get_hashed_password(password, hash_type):
     password = password.encode("utf-8")
-    hashType = hashType.upper()
-    if hashType == "MD5":
+    hash_type = hash_type.upper()
+    if hash_type == "MD5":
         return hashlib.md5(password).hexdigest()
-    elif hashType == "SHA-1":
+    elif hash_type == "SHA-1":
         return hashlib.sha1(password).hexdigest()
-    elif hashType == "SHA-256":
+    elif hash_type == "SHA-256":
         return hashlib.sha256(password).hexdigest()
-    elif hashType == "SHA-512":
+    elif hash_type == "SHA-512":
         return hashlib.sha512(password).hexdigest()
     return password.decode("utf-8")
 
 
 # /**
-#  * This is checking the hashType and returning as string
+#  * This is checking the hash_type and returning as string
 #  * @return Either "hash" or "password", depending if the password is plain-text or hexed
 #  */
-def getHashOrPassword(hashType):
-    hashTypes = ["MD5", "SHA-1", "SHA-256", "SHA-512"]
-    if hashType.upper() in hashTypes:
-        return "hash"
-    return "password"
-
-
-# Returns protocol that is requested, http is faster than https but less secure
-def getProtocol(isUsingHttps):
-    if isUsingHttps:
-        return "https://"
-    return "http://"
+def get_hash_or_password(hash_type):
+    hash_types = ["MD5", "SHA-1", "SHA-256", "SHA-512"]
+    return "hash" if hash_type.upper() in hash_types else "password"
 
 
 # /**
 # * Checks Fields
 # * @return The string output if the password /or token field is null/empty
 # */
-def checkFields(password, token):
+def check_fields(password, token):
     if password is None or password == "":
         return "Password field can't be empty"
     elif token is None or token == "":
@@ -97,33 +88,34 @@ def checkFields(password, token):
 
 
 # This is an example of how you can call the methods for checking if your password is breached
-def initExample():
-    global password, hashType, usingHttps, token, apiUrl, returnedJson
-    returnField = checkFields(password, token)
-    if len(returnField) > 0:
-        return print(returnField)
+def init_example():
+    global password, hash_type, using_https, token, api_url, returned_json
+    return_field = check_fields(password, token)
+    if len(return_field) > 0:
+        return print(return_field)
 
-    breached = isBreached(password, hashType, usingHttps, token, apiUrl)
-    hasReturnedJson = len(returnedJson) > 0
-    if breached and hasReturnedJson:
-        print("You have been breached : " + returnedJson)
-    elif not breached and hasReturnedJson:
-        print("You have not been breached : " + returnedJson)
+    breached = is_breached(password, hash_type, using_https, token, api_url)
+    has_returned_json = len(returned_json) > 0
+    if breached and has_returned_json:
+        print("You have been breached : " + returned_json)
+    elif not breached and has_returned_json:
+        print("You have not been breached : " + returned_json)
 
 
 # /**
 #  * Main function (if running from IDE or shell for testing)
-#  * @param argv - Can parse password as sys.argv[1] and hashType as sys.argv[2]
+#  * @param argv - Can parse password as sys.argv[1] and hash_type as sys.argv[2]
 #  */
 def main():
-    global password, hashType, usingHttps, token, apiUrl
+    global password, hash_type, using_https, token, api_url
     if len(sys.argv) > 1:
         password = sys.argv[1]
     if len(sys.argv) > 2:
-        hashType = sys.argv[2]
+        hash_type = sys.argv[2]
     if len(sys.argv) > 3:
-        usingHttps = sys.argv[3].lower() == 'true'
-    initExample()
+        using_https = sys.argv[3].lower() == 'true'
+    init_example()
+
 
 # Calls main()
 if __name__ == "__main__":
