@@ -3,7 +3,7 @@ import sys
 import hashlib
 
 password = ""  # CHANGE ME
-hashType = ""  # MD5, SHA-1, SHA-256, SHA-512 & PLAIN-TEXT
+hashType = "SHA-1"  # MD5, SHA-1, SHA-256, SHA-512 & PLAIN-TEXT
 usingHttps = True  # //True = HTTPS, False = HTTP
 
 apiUrl = "api.rsps.tools/jetkai/breachcheck"  # DO NOT CHANGE
@@ -97,11 +97,11 @@ def checkFields(password, token):
 
 
 # This is an example of how you can call the methods for checking if your password is breached
-def initExample(password, hashType, usingHttps, token, apiUrl):
-    global returnedJson
+def initExample():
+    global password, hashType, usingHttps, token, apiUrl, returnedJson
     returnField = checkFields(password, token)
     if len(returnField) > 0:
-        return returnField
+        return print(returnField)
 
     breached = isBreached(password, hashType, usingHttps, token, apiUrl)
     hasReturnedJson = len(returnedJson) > 0
@@ -123,7 +123,7 @@ def main():
         hashType = sys.argv[2]
     if len(sys.argv) > 3:
         usingHttps = sys.argv[3]
-    initExample(password, hashType, usingHttps, token, apiUrl)
+    initExample()
 
 # Calls main()
 if __name__ == "__main__":
